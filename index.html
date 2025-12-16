@@ -42,19 +42,23 @@
             box-sizing: border-box;
             font-size: 1em;
         }
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            background-color: #5cb85c; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #4cae4c;
+<!--        button { -->
+<!--            width: 100%; -->
+<!--            padding: 12px; -->
+<!--            background-color: #5cb85c; -->
+<!--            color: white; -->
+<!--            border: none; -->
+<!--            border-radius: 4px; -->
+<!--            font-size: 1.1em;-->
+<!--            cursor: pointer;-->
+<!--            transition: background-color 0.3s;-->
+<!--        }-->
+<!--        button:hover {-->
+<!--            background-color: #4cae4c;-->
+<!--        }-->
+        /* Hidden button for dynamic calculation */
+        #calculateButton {
+            display: none;
         }
         .result { 
             margin-top: 25px; 
@@ -75,50 +79,50 @@
         }
     </style>
 </head>
-<body>
+<body onload="calculateDough()">
     <h1>🍕 Neapolitan Dough Calculator</h1>
 
     <div class="input-group">
         <label for="ballWeight">Pizza Dough Ball Size (g):</label>
-        <input type="number" id="ballWeight" value="275" min="50">
+        <input type="number" id="ballWeight" value="275" min="50" oninput="calculateDough()">
     </div>
 
     <div class="input-group">
         <label for="ballCount">Amount of Dough Balls to Make:</label>
-        <input type="number" id="ballCount" value="4" min="1">
+        <input type="number" id="ballCount" value="4" min="1" oninput="calculateDough()">
     </div>
 
     <div class="input-group">
         <label for="hydration">Hydration (%):</label>
-        <input type="number" id="hydration" value="70" min="5" max="100">
+        <input type="number" id="hydration" value="70" min="5" max="100" oninput="calculateDough()">
     </div>
 
     <div class="input-group">
         <label for="salt">Salt (% of Flour):</label>
-        <input type="number" id="salt" value="3" step="0.1" min="0" max="5">
+        <input type="number" id="salt" value="3" step="0.1" min="0" max="5" oninput="calculateDough()">
     </div>
 
     <h2>Fermentation Schedule</h2>
 
     <div class="input-group">
         <label for="temp1">Fermentation Temperature 1 (°C):</label>
-        <input type="number" id="temp1" value="20" step="0.1">
+        <input type="number" id="temp1" value="20" step="0.1" oninput="calculateDough()">
     </div>
     <div class="input-group">
         <label for="duration1">Fermentation Duration 1 (hours):</label>
-        <input type="number" id="duration1" value="12" step="0.5" min="0">
+        <input type="number" id="duration1" value="12" step="0.5" min="0" oninput="calculateDough()">
     </div>
 
     <div class="input-group">
         <label for="temp2">Fermentation Temperature 2 (°C):</label>
-        <input type="number" id="temp2" value="4" step="0.1">
+        <input type="number" id="temp2" value="4" step="0.1" oninput="calculateDough()">
     </div>
     <div class="input-group">
         <label for="duration2">Fermentation Duration 2 (hours):</label>
-        <input type="number" id="duration2" value="36" step="0.5" min="0">
+        <input type="number" id="duration2" value="36" step="0.5" min="0" oninput="calculateDough()">
     </div>
 
-    <button onclick="calculateDough()">Calculate Recipe</button>
+    <button id="calculateButton" onclick="calculateDough()">Calculate Recipe</button>
 
     <div class="result" id="results">
         <h2>Enter values and click 'Calculate Recipe'</h2>
