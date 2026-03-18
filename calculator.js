@@ -48,7 +48,7 @@ function calculateDough() {
 
     // --- 4. YEAST CALCULATION ---
 
-    const baselineYeast = 0.08;
+    const baselineYeast = 0.4; // updated, 2.2 hoger
 
     // Yeast Factor (YF) calculation remains the same, as it depends on total time/temp
     const YF1 = (duration1 / 24) * (1 + (25 - temp1) / 10);
@@ -71,7 +71,7 @@ function calculateDough() {
         <p><strong>Flour (100%):</strong> <strong>${totalFlourWeight.toFixed(1)} g</strong></p>
         <p><strong>Water (Total): ${totalWater.toFixed(1)} g</strong></p>
         <p><strong>Salt (Total): ${totalSalt.toFixed(2)} g</strong></p>
-        <p><strong>Instant Dry Yeast (Total):</strong> <strong>${yeastNeeded.toFixed(3)} g</strong></p>
+        <p><strong>Instant Dry Yeast (${targetYeastPercent.toFixed(3)}%):</strong> <strong>${yeastNeeded.toFixed(3)} g</strong></p>
         <hr>
     `;
 
