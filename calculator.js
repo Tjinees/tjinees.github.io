@@ -1,110 +1,82 @@
-function calculateDough() {
-    // --- 1. GET INPUTS & CHECK TOGGLE ---
+function updateUI() {
     const useBiga = document.getElementById('useBiga').checked;
 
-    // Core Inputs
-    const ballWeight = parseFloat(document.getElementById('ballWeight').value);
-    const ballCount = parseFloat(document.getElementById('ballCount').value);
-    const totalHydration = parseFloat(document.getElementById('hydration').value);
+    // Show/Hide Biga specific settings
+    document.getElementById('biga-config').classList.toggle('hidden', !useBiga);
+    document.getElementById('phase3-section').classList.toggle('hidden', !useBiga);
+
+    // Update Labels
+    document.getElementById('label-p1').textContent = useBiga ? "Phase 1: Biga Temp (°C):" : "Phase 1: Bulk Fermentation Temp (°C):";
+    document.getElementById('label-p2').textContent = useBiga ? "Phase 2: Fridge Temp (°C):" : "Phase 2: Final Proof Temp (°C):";
+
+    calculateDough();
+}
+
+function calculateDough() {
+    const useBiga = document.getElementById('useBiga').checked;
+
+    // Get values
+    const ballW = parseFloat(document.getElementById('ballWeight').value);
+    const count = parseFloat(document.getElementById('ballCount').value);
+    const hydr = parseFloat(document.getElementById('hydration').value);
     const salt = parseFloat(document.getElementById('salt').value);
 
-    // Biga Input (only used if toggled)
-    const bigaHydration = useBiga ? parseFloat(document.getElementById('bigaHydration').value) : 0;
+    // Temps and Durations
+    const t1 = parseFloat(document.getElementById('temp1').value);
+    const d1 = parseFloat(document.getElementById('dur1').value);
+    const t2 = parseFloat(document.getElementById('temp2').value);
+    const d2 = parseFloat(document.getElementById('dur2').value);
 
-    // Fermentation Schedule
-    const temp1 = parseFloat(document.getElementById('temp1').value);
-    const duration1 = parseFloat(document.getElementById('duration1').value);
-    const temp2 = parseFloat(document.getElementById('temp2').value);
-    const duration2 = parseFloat(document.getElementById('duration2').value);
+    // Optional Phase 3
+    const t3 = useBiga ? parseFloat(document.getElementById('temp3').value) : 0;
+    const d3 = useBiga ? parseFloat(document.getElementById('dur3').value) : 0;
 
-    // Update labels based on method
-    document.getElementById('label-temp1').textContent = useBiga
-        ? 'Fermentation Temperature 1 (Biga Mix) (°C):'
-        : 'Fermentation Temperature 1 (Bulk Fermentation) (°C):';
-    document.getElementById('label-duration1').textContent = useBiga
-        ? 'Fermentation Duration 1 (Biga Rest) (hours):'
-        : 'Fermentation Duration 1 (Bulk Fermentation) (hours):';
-
-    // --- 2. INPUT VALIDATION ---
-    if (isNaN(ballWeight) || ballWeight <= 0 || isNaN(ballCount) || ballCount <= 0 ||
-        isNaN(totalHydration) || isNaN(salt) ||
-        isNaN(temp1) || isNaN(duration1) || isNaN(temp2) || isNaN(duration2)) {
-
-        document.getElementById('results').innerHTML = '<h2>⚠️ Please fill in all required fields.</h2>';
-        return;
-    }
-    if (useBiga && (isNaN(bigaHydration) || totalHydration < bigaHydration)) {
-        document.getElementById('results').innerHTML = '<h2>⚠️ Biga Hydration must be a valid number and lower than Total Hydration.</h2>';
+    // Basic Validation
+    if ([ballW, count, hydr, salt, t1, d1, t2, d2].some(isNaN)) {
+        document.getElementById('results').innerHTML = "Enter all values...";
         return;
     }
 
-    // --- 3. BASE RECIPE CALCULATION ---
+    // Recipe Math
+    const totalDough = ballW * count;
+    const totalFlour = (totalDough / (100 + hydr + salt)) * 100;
+    const totalWater = (totalFlour * hydr) / 100;
+    const totalSalt = (totalFlour * salt) / 100;
 
-    const totalDoughWeight = ballWeight * ballCount;
-    const TBP = 100 + totalHydration + salt;
-    const totalFlourWeight = (totalDoughWeight / TBP) * 100; // TFW
-    const totalWater = (totalFlourWeight * totalHydration) / 100;
-    const totalSalt = (totalFlourWeight * salt) / 100;
+    // Yeast Math
+    const baseline = 0.2;
+    const getYF = (d, t) => {
+        if (d === 0) return 0;
+        let factor = (1 + (25 - t) / 10);
+        if (t <= 6) factor *= 0.25; // The Fridge Brake
+        return (d / 24) * factor;
+    };
 
-    // --- 4. YEAST CALCULATION ---
+    const totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
+    const yeastPercent = baseline / totalYF;
+    const yeastNeeded = (totalFlour * yeastPercent) / 100;
 
-    const baselineYeast = 0.4; // updated, 2.2 hoger
-
-    // Yeast Factor (YF) calculation remains the same, as it depends on total time/temp
-    const YF1 = (duration1 / 24) * (1 + (25 - temp1) / 10);
-    const YF2 = (duration2 / 24) * (1 + (25 - temp2) / 10);
-    const YF = YF1 + YF2;
-
-    // Target Yeast Percentage (of total flour weight)
-    const targetYeastPercent = baselineYeast / YF;
-    const yeastNeeded = (totalFlourWeight * targetYeastPercent) / 100;
-
-    // --- 5. DYNAMIC OUTPUT GENERATION ---
-
-    const resultsDiv = document.getElementById('results');
-
-    let htmlOutput = `
-        <p><strong>Total Dough Weight: ${totalDoughWeight.toFixed(1)} g</strong></p>
-        <p><strong>Total Recipe Hydration: ${totalHydration}%</strong></p>
-        <hr>
-        <h3>Required Ingredients:</h3>
-        <p><strong>Flour (100%):</strong> <strong>${totalFlourWeight.toFixed(1)} g</strong></p>
-        <p><strong>Water (Total): ${totalWater.toFixed(1)} g</strong></p>
-        <p><strong>Salt (Total): ${totalSalt.toFixed(2)} g</strong></p>
-        <p><strong>Instant Dry Yeast (${targetYeastPercent.toFixed(3)}%):</strong> <strong>${yeastNeeded.toFixed(3)} g</strong></p>
+    // Output Generation
+    let html = `
+        <p><strong>Total Flour:</strong> ${totalFlour.toFixed(1)}g</p>
+        <p><strong>Total Water:</strong> ${totalWater.toFixed(1)}g</p>
+        <p><strong>Instant Yeast:</strong> ${yeastNeeded.toFixed(3)}g</p>
+        <p><strong>Salt:</strong> ${totalSalt.toFixed(1)}g</p>
         <hr>
     `;
 
     if (useBiga) {
-        // BIGA METHOD BREAKDOWN
-
-        // Biga Ingredients
-        const bigaFlour = totalFlourWeight;
-        const bigaWater = (bigaFlour * bigaHydration) / 100;
-
-        // Final Mix Ingredients
-        const remainingWaterPercent = totalHydration - bigaHydration;
-        const remainingWater = (totalFlourWeight * remainingWaterPercent) / 100;
-
-        htmlOutput += `
-            <h3>Phase 1: The Biga Mix</h3>
-            <p><strong>Flour:</strong> <strong>${bigaFlour.toFixed(1)} g</strong></p>
-            <p><strong>Water (${bigaHydration}%):</strong> <strong>${bigaWater.toFixed(1)} g</strong></p>
-            <p><strong>Instant Dry Yeast:</strong> <strong>${yeastNeeded.toFixed(3)} g</strong></p>
-
-            <hr>
-
-            <h3>Phase 2: Final Dough (After Biga Fermentation)</h3>
-            <p><strong>Biga: ${(bigaFlour + bigaWater + yeastNeeded).toFixed(1)} g</strong></p>
-            <p><strong>Remaining Water:</strong> <strong>${remainingWater.toFixed(1)} g</strong></p>
-            <p><strong>Remaining Salt:</strong> <strong>${totalSalt.toFixed(2)} g</strong></p>
+        const bigaHydr = parseFloat(document.getElementById('bigaHydration').value);
+        const bigaWater = (totalFlour * bigaHydr) / 100;
+        html += `
+            <h4 style="color:#d9534f">STEP 1: THE BIGA</h4>
+            <p>Mix <b>${totalFlour.toFixed(1)}g flour</b>, <b>${bigaWater.toFixed(1)}g water</b>, and all the yeast.</p>
+            <h4 style="color:#d9534f">STEP 2: FINAL MIX</h4>
+            <p>Add the Biga to <b>${(totalWater - bigaWater).toFixed(1)}g water</b> and <b>${totalSalt.toFixed(2)}g salt</b>.</p>
         `;
-
     } else {
-
+        html += `<p><b>Direct Method:</b> Mix all ingredients at once.</p>`;
     }
 
-    resultsDiv.innerHTML = htmlOutput;
+    document.getElementById('results').innerHTML = html;
 }
-
-// Initial function call upon loading the body (defined in index.html's <body> tag)

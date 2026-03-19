@@ -5,207 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neapolitan Dough Calculator</title>
     <style>
-        /* BASE STYLES (Unchanged) */
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            max-width: 450px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f4f4f9;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #d9534f;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .input-group {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-            font-size: 0.9em;
-        }
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 1em;
-        }
-        .result {
-            margin-top: 25px;
-            padding: 15px;
-            border: 2px solid #337ab7;
-            background: #d9edf7;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .result h2 {
-            margin-top: 0;
-            color: #337ab7;
-            font-size: 1.2em;
-        }
-        .result strong {
-            font-size: 1.5em;
-            color: #333;
-        }
-        .hidden {
-            display: none;
-        }
+        /* BASE STYLES */
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 450px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: #d9534f; text-align: center; margin-bottom: 30px; }
+        h2 { font-size: 1.1em; color: #444; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; }
+        .input-group { margin-bottom: 12px; padding: 10px; background-color: #fff; border-radius: 5px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 0.85em; }
+        input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em; }
+        .result { margin-top: 25px; padding: 15px; border: 2px solid #337ab7; background: #eef7ff; border-radius: 5px; }
+        .hidden { display: none; }
 
-        /* --- TOGGLE SWITCH STYLES --- */
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            padding: 15px;
-            background-color: #ffe0b2;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .toggle-label {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        /* Hide default HTML checkbox */
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        /* The switch track */
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        /* The switch knob */
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        /* When checked, change background color and knob position */
-        input:checked + .slider {
-            background-color: #5cb85c; /* Green color for ON */
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-
-        /* Container for the switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
+        /* TOGGLE SWITCH */
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 15px; background-color: #ffe0b2; border-radius: 8px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #5cb85c; }
+        input:checked + .slider:before { transform: translateX(24px); }
     </style>
-    <script>
-        // JS function to toggle visibility of Biga inputs
-        function toggleBigaInputs() {
-            const isBiga = document.getElementById('useBiga').checked;
-            const bigaSection = document.getElementById('biga-section');
-            bigaSection.classList.toggle('hidden', !isBiga);
-
-            // Re-run calculation whenever the toggle changes
-            calculateDough();
-        }
-    </script>
 </head>
-<body onload="toggleBigaInputs()">
-    <h1>🍕 Neapolitan Dough Calculator</h1>
+<body onload="updateUI()">
+    <h1>🍕 Dough Calculator</h1>
 
     <div class="toggle-container">
-        <label for="useBiga" class="toggle-label">Use Biga (Pre-ferment) Method</label>
-
+        <span style="font-weight:bold">Use Biga Method</span>
         <label class="switch">
-            <input type="checkbox" id="useBiga" checked onchange="toggleBigaInputs()">
+            <input type="checkbox" id="useBiga" checked onchange="updateUI()">
             <span class="slider"></span>
         </label>
     </div>
 
     <div class="input-group">
-        <label for="ballWeight">Pizza Dough Ball Size (g):</label>
-        <input type="number" id="ballWeight" value="275" min="50" oninput="calculateDough()">
+        <label>Dough Ball Weight (g):</label>
+        <input type="number" id="ballWeight" value="270" oninput="calculateDough()">
     </div>
-
     <div class="input-group">
-        <label for="ballCount">Amount of Dough Balls to Make:</label>
-        <input type="number" id="ballCount" value="4" min="1" oninput="calculateDough()">
+        <label>Number of Balls:</label>
+        <input type="number" id="ballCount" value="3" oninput="calculateDough()">
     </div>
-
     <div class="input-group">
-        <label for="hydration">Total Dough Hydration (%):</label>
-        <input type="number" id="hydration" value="70" min="5" max="100" oninput="calculateDough()">
+        <label>Total Hydration (%):</label>
+        <input type="number" id="hydration" value="70" oninput="calculateDough()">
     </div>
-
     <div class="input-group">
-        <label for="salt">Salt (% of Flour):</label>
-        <input type="number" id="salt" value="2.8" step="0.1" min="0" max="10" oninput="calculateDough()">
+        <label>Salt (%):</label>
+        <input type="number" id="salt" value="3" step="0.1" oninput="calculateDough()">
     </div>
 
-    <div id="biga-section" class="hidden">
-        <h2>Biga Configuration (100% Flour)</h2>
+    <div id="biga-config" class="hidden">
+        <h2>Biga Settings</h2>
         <div class="input-group">
-            <label for="bigaHydration">Biga Hydration (%):</label>
-            <input type="number" id="bigaHydration" value="45" min="30" max="60" oninput="calculateDough()">
+            <label>Biga Hydration (%):</label>
+            <input type="number" id="bigaHydration" value="50" oninput="calculateDough()">
         </div>
     </div>
 
     <h2>Fermentation Schedule</h2>
 
     <div class="input-group">
-        <label for="temp1" id="label-temp1">Fermentation Temperature 1 (Biga Mix) (°C):</label>
-        <input type="number" id="temp1" value="20" step="0.1" oninput="calculateDough()">
-    </div>
-    <div class="input-group">
-        <label for="duration1" id="label-duration1">Fermentation Duration 1 (Biga Rest) (hours):</label>
-        <input type="number" id="duration1" value="16" step="0.5" min="0" oninput="calculateDough()">
+        <label id="label-p1">Phase 1: Biga Temp (°C):</label>
+        <input type="number" id="temp1" value="21" oninput="calculateDough()">
+        <label style="margin-top:5px">Duration (hours):</label>
+        <input type="number" id="dur1" value="16" oninput="calculateDough()">
     </div>
 
     <div class="input-group">
-        <label for="temp2">Fermentation Temperature 2 (Final Proof) (°C):</label>
-        <input type="number" id="temp2" value="4" step="0.1" oninput="calculateDough()">
-    </div>
-    <div class="input-group">
-        <label for="duration2">Fermentation Duration 2 (Final Proof) (hours):</label>
-        <input type="number" id="duration2" value="36" step="0.5" min="0" oninput="calculateDough()">
+        <label id="label-p2">Phase 2: Fridge Temp (°C):</label>
+        <input type="number" id="temp2" value="4" oninput="calculateDough()">
+        <label style="margin-top:5px">Duration (hours):</label>
+        <input type="number" id="dur2" value="36" oninput="calculateDough()">
     </div>
 
-    <div class="result" id="results">
-        <h2>Enter values to calculate the recipe.</h2>
+    <div id="phase3-section" class="input-group hidden">
+        <label>Phase 3: Final Room Temp Proof (°C):</label>
+        <input type="number" id="temp3" value="21" oninput="calculateDough()">
+        <label style="margin-top:5px">Duration (hours):</label>
+        <input type="number" id="dur3" value="8" oninput="calculateDough()">
     </div>
+
+    <div class="result" id="results"></div>
 
     <script src="calculator.js"></script>
 </body>
