@@ -307,67 +307,6 @@ function setMethod(bigaOn) {
     updateUI();
 }
 
-function calculateDough() {
-    const biga = document.getElementById('useBiga').checked;
-    const W = parseFloat(document.getElementById('ballWeight').value)||0;
-    const N = parseFloat(document.getElementById('ballCount').value)||0;
-    const hydr = parseFloat(document.getElementById('hydration').value)||0;
-    const saltPct = parseFloat(document.getElementById('salt').value)||0;
-    const bigaHydrPct = parseFloat(document.getElementById('bigaHydration').value)||50;
-    const t1=parseFloat(document.getElementById('temp1').value)||0, d1=parseFloat(document.getElementById('dur1').value)||0;
-    const t2=parseFloat(document.getElementById('temp2').value)||0, d2=parseFloat(document.getElementById('dur2').value)||0;
-    const t3=biga?(parseFloat(document.getElementById('temp3').value)||0):0;
-    const d3=biga?(parseFloat(document.getElementById('dur3').value)||0):0;
-
-    const totalDough = W * N;
-    const totalFlour = (totalDough/(100+hydr+saltPct))*100;
-    const totalWater = (totalFlour*hydr)/100;
-    const totalSalt  = (totalFlour*saltPct)/100;
-
-    const getYF=(d,t)=>{ if(d===0)return 0; let f=(1+(25-t)/10); if(t<=7)f*=0.25; return(d/24)*f; };
-    let totalYF;
-    if(t2<=7&&d3>0){const wu=Math.min(2,d3),st=Math.max(0,d3-wu);totalYF=getYF(d1,t1)+getYF(d2,t2)+getYF(wu,(t2+t3)/2)+getYF(st,t3);}
-    else{totalYF=getYF(d1,t1)+getYF(d2,t2)+getYF(d3,t3);}
-    const yeastG=(totalFlour*(0.2/totalYF))/100;
-
-    const chip=(label,val,unit,span='')=>`
-      <div class="r-chip ${span}">
-        <div class="r-chip-label">${label}</div>
-        <div class="r-chip-val">${val}<span class="u">${unit}</span></div>
-      </div>`;
-
-    let html = `<div class="results-body">`;
-
-    if(biga){
-        const bigaWater=(totalFlour*bigaHydrPct)/100;
-        const remWater=totalWater-bigaWater;
-        html+=`
-        <div class="r-group-label">Step 1 — Biga</div>
-        <div class="r-chips">
-          ${chip('Flour', totalFlour.toFixed(1), 'g')}
-          ${chip('Water', bigaWater.toFixed(1), 'g')}
-          ${chip('Yeast', yeastG.toFixed(3), 'g', 'span2')}
-        </div>
-        <div class="r-divider"></div>
-        <div class="r-group-label">Step 2 — Final mix</div>
-        <div class="r-chips">
-          ${chip('Water', remWater.toFixed(1), 'g')}
-          ${chip('Salt', totalSalt.toFixed(1), 'g')}
-        </div>`;
-    } else {
-        html+=`
-        <div class="r-group-label">Ingredients</div>
-        <div class="r-chips">
-          ${chip('Flour', totalFlour.toFixed(1), 'g')}
-          ${chip('Water', totalWater.toFixed(1), 'g')}
-          ${chip('Salt', totalSalt.toFixed(1), 'g')}
-          ${chip('Yeast', yeastG.toFixed(3), 'g')}
-        </div>`;
-    }
-    html += `</div>`;
-    document.getElementById('results').innerHTML = html;
-}
-
 function updateUI(){
     const biga=document.getElementById('useBiga').checked;
     document.getElementById('biga-config').classList.toggle('hidden',!biga);
@@ -381,11 +320,19 @@ function updateUI(){
         document.getElementById('label-p2').textContent='Phase 2 — Fridge';
         pip1.className='phase-pip';        // ember
         pip2.className='phase-pip c2';     // cool blue
+        document.getElementById('temp1').value = 21;
+        document.getElementById('temp2').value = 4;
+        document.getElementById('dur1').value = 12;
+        document.getElementById('dur2').value = 24;
     } else {
         document.getElementById('label-p1').textContent='Phase 1 — Fridge';
         document.getElementById('label-p2').textContent='Phase 2 — Final Proof';
         pip1.className='phase-pip c2';     // cool blue
         pip2.className='phase-pip c3';     // warm gold
+        document.getElementById('temp1').value = 4;
+        document.getElementById('temp2').value = 21;
+        document.getElementById('dur1').value = 24;
+        document.getElementById('dur2').value = 8;
     }
     calculateDough();
 }
