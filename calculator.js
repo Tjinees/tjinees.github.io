@@ -84,10 +84,6 @@ function calculateDough() {
       </div>`;
 
     let html = `
-      <div class="results-bar">
-        <span class="results-bar-label">Recipe</span>
-        <span class="results-bar-total">${totalDough.toFixed(0)}<span>g</span></span>
-      </div>
       <div class="results-body">`;
 
     if (useBiga) {
