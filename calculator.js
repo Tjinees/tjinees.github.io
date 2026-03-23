@@ -31,6 +31,9 @@ function calculateDough() {
     const t3 = useBiga ? parseFloat(document.getElementById('temp3').value) : 0;
     const d3 = useBiga ? parseFloat(document.getElementById('dur3').value) : 0;
 
+    // Use the target temp for the majority of the time
+    let effectiveTemp3 = t3;
+
     // Basic Validation
     if ([ballW, count, hydr, salt, t1, d1, t2, d2].some(isNaN)) {
         document.getElementById('results').innerHTML = "Enter all values...";
@@ -48,35 +51,98 @@ function calculateDough() {
     const getYF = (d, t) => {
         if (d === 0) return 0;
         let factor = (1 + (25 - t) / 10);
-        if (t <= 6) factor *= 0.25; // The Fridge Brake
+        if (t <= 7) factor *= 0.25; // The Fridge Brake
         return (d / 24) * factor;
     };
 
-    const totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
+    // If the dough is coming from a cold Phase 2 (the fridge)
+    if (t2 <= 7 && d3 > 0) {
+        // We simulate the 2-hour warm-up lag by averaging the fridge and room temp
+        const warmUpDuration = Math.min(2, d3);
+        const stableDuration = Math.max(0, d3 - warmUpDuration);
+        const avgWarmUpTemp = (t2 + t3) / 2;
+
+        // Calculate a weighted Yeast Factor for Phase 3
+        const YF3_warmup = getYF(warmUpDuration, avgWarmUpTemp);
+        const YF3_stable = getYF(stableDuration, t3);
+
+        totalYF = getYF(d1, t1) + getYF(d2, t2) + YF3_warmup + YF3_stable;
+    } else {
+        totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
+    }
+//    const totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
+
     const yeastPercent = baseline / totalYF;
     const yeastNeeded = (totalFlour * yeastPercent) / 100;
 
-    // Output Generation
+
+// Output Generation — styled for new UI
+    const chip = (label, val, unit, span='') => `
+      <div class="r-chip ${span}">
+        <div class="r-chip-label">${label}</div>
+        <div class="r-chip-val">${val}<span class="u">${unit}</span></div>
+      </div>`;
+
     let html = `
-        <p><strong>Total Flour:</strong> ${totalFlour.toFixed(1)}g</p>
-        <p><strong>Total Water:</strong> ${totalWater.toFixed(1)}g</p>
-        <p><strong>Instant Yeast:</strong> ${yeastNeeded.toFixed(3)}g</p>
-        <p><strong>Salt:</strong> ${totalSalt.toFixed(1)}g</p>
-        <hr>
-    `;
+      <div class="results-bar">
+        <span class="results-bar-label">Recipe</span>
+        <span class="results-bar-total">${totalDough.toFixed(0)}<span>g</span></span>
+      </div>
+      <div class="results-body">`;
 
     if (useBiga) {
         const bigaHydr = parseFloat(document.getElementById('bigaHydration').value);
         const bigaWater = (totalFlour * bigaHydr) / 100;
+        const remWater  = totalWater - bigaWater;
         html += `
-            <h4 style="color:#d9534f">STEP 1: THE BIGA</h4>
-            <p>Mix <b>${totalFlour.toFixed(1)}g flour</b>, <b>${bigaWater.toFixed(1)}g water</b>, and all the yeast.</p>
-            <h4 style="color:#d9534f">STEP 2: FINAL MIX</h4>
-            <p>Add the Biga to <b>${(totalWater - bigaWater).toFixed(1)}g water</b> and <b>${totalSalt.toFixed(2)}g salt</b>.</p>
-        `;
+            <div class="r-group-label">Step 1 — Biga</div>
+            <div class="r-chips">
+              ${chip('Flour', totalFlour.toFixed(1), 'g')}
+              ${chip('Water', bigaWater.toFixed(1), 'g')}
+              ${chip('Yeast', yeastNeeded.toFixed(3), 'g', 'span2')}
+            </div>
+            <div class="r-divider"></div>
+            <div class="r-group-label">Step 2 — Final mix</div>
+            <div class="r-chips">
+              ${chip('Water', remWater.toFixed(1), 'g')}
+              ${chip('Salt', totalSalt.toFixed(1), 'g')}
+            </div>`;
     } else {
-        html += `<p><b>Direct Method:</b> Mix all ingredients at once.</p>`;
+        html += `
+            <div class="r-group-label">Ingredients</div>
+            <div class="r-chips">
+              ${chip('Flour', totalFlour.toFixed(1), 'g')}
+              ${chip('Water', totalWater.toFixed(1), 'g')}
+              ${chip('Salt', totalSalt.toFixed(1), 'g')}
+              ${chip('Yeast', yeastNeeded.toFixed(3), 'g')}
+            </div>`;
     }
 
+    html += `</div>`;
     document.getElementById('results').innerHTML = html;
+//    document.getElementById('results').innerHTML = html;
+
+    // Output Generation
+//    let html = `
+//        <p><strong>Total Flour:</strong> ${totalFlour.toFixed(1)}g</p>
+//        <p><strong>Total Water:</strong> ${totalWater.toFixed(1)}g</p>
+//        <p><strong>Instant Yeast:</strong> ${yeastNeeded.toFixed(3)}g</p>
+//        <p><strong>Salt:</strong> ${totalSalt.toFixed(1)}g</p>
+//        <hr>
+//    `;
+//
+//    if (useBiga) {
+//        const bigaHydr = parseFloat(document.getElementById('bigaHydration').value);
+//        const bigaWater = (totalFlour * bigaHydr) / 100;
+//        html += `
+//            <h4 style="color:#d9534f">STEP 1: THE BIGA</h4>
+//            <p>Mix <b>${totalFlour.toFixed(1)}g flour</b>, <b>${bigaWater.toFixed(1)}g water</b>, and all the yeast.</p>
+//            <h4 style="color:#d9534f">STEP 2: FINAL MIX</h4>
+//            <p>Add the Biga to <b>${(totalWater - bigaWater).toFixed(1)}g water</b> and <b>${totalSalt.toFixed(2)}g salt</b>.</p>
+//        `;
+//    } else {
+//        html += `<p><b>Direct Method:</b> Mix all ingredients at once.</p>`;
+//    }
+//
+//    document.getElementById('results').innerHTML = html;
 }

@@ -3,89 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neapolitan Dough Calculator</title>
+    <title>Dough Calculator — V3</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* BASE STYLES */
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 450px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
-        h1 { color: #d9534f; text-align: center; margin-bottom: 30px; }
-        h2 { font-size: 1.1em; color: #444; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; }
-        .input-group { margin-bottom: 12px; padding: 10px; background-color: #fff; border-radius: 5px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 0.85em; }
-        input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em; }
-        .result { margin-top: 25px; padding: 15px; border: 2px solid #337ab7; background: #eef7ff; border-radius: 5px; }
-        .hidden { display: none; }
+        :root {
+            --bg: #2f2f2f;
+            --surface: #383838;
+            --surface2: #2a2a2a;
+            --border: rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.13);
+            --ink: #ececec;
+            --muted: #888;
+            --muted2: #aaa;
+            --ember: #d4522a;
+            --ember-glow: rgba(212,82,42,0.15);
+            --cool: #5590c8;
+            --tr: 160ms ease;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* TOGGLE SWITCH */
-        .toggle-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 15px; background-color: #ffe0b2; border-radius: 8px; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #5cb85c; }
-        input:checked + .slider:before { transform: translateX(24px); }
+        body {
+            font-family: 'DM Mono', monospace;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 44px 20px 80px;
+        }
+        .container { max-width: 400px; margin: 0 auto; }
+
+        /* HEADER */
+        header { margin-bottom: 40px; }
+        .brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.9rem;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            color: var(--ink);
+        }
+        .brand em { font-style: italic; color: var(--ember); }
+        .brand-sub { margin-top: 5px; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+        /* SECTION */
+        .section { margin-bottom: 6px; }
+
+        .section-label {
+            font-size: 0.58rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+            padding: 0 2px;
+        }
+
+        /* GLASS PANEL */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* SEGMENTED CONTROL */
+        .seg-control {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 4px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+        .seg-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted2);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: background var(--tr), color var(--tr);
+            text-align: center;
+        }
+        .seg-btn.active {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1px solid var(--border2);
+        }
+
+        /* ROW */
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+        }
+        .row:last-child { border-bottom: none; }
+        .row-label { font-size: 0.73rem; color: var(--ink); }
+        .row-sub { font-size: 0.6rem; color: var(--muted); margin-top: 1px; }
+
+        .row input[type="number"] {
+            width: 70px;
+            padding: 6px 9px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.82rem;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            color: var(--ink);
+            text-align: right;
+            transition: border-color var(--tr), box-shadow var(--tr);
+            -moz-appearance: textfield;
+            outline: none;
+        }
+        .row input[type="number"]::-webkit-inner-spin-button,
+        .row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .row input[type="number"]:focus {
+            border-color: var(--ember);
+            box-shadow: 0 0 0 3px var(--ember-glow);
+        }
+
+        /* PHASE BLOCK */
+        .phase-block {
+            border-bottom: 1px solid var(--border);
+        }
+        .phase-block:last-child { border-bottom: none; }
+
+        .phase-name {
+            padding: 8px 14px 4px;
+            font-size: 0.58rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .phase-pip {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--ember);
+            flex-shrink: 0;
+        }
+        .phase-pip.c2 { background: var(--cool); }
+        .phase-pip.c3 { background: #c4941c; }
+
+        .phase-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 6px 14px 12px;
+        }
+        .p-cell label {
+            display: block;
+            font-size: 0.58rem;
+            color: var(--muted);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .p-cell input[type="number"] {
+            width: 100%;
+            padding: 7px 9px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.82rem;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            color: var(--ink);
+            text-align: right;
+            transition: border-color var(--tr), box-shadow var(--tr);
+            -moz-appearance: textfield;
+            outline: none;
+        }
+        .p-cell input::-webkit-inner-spin-button,
+        .p-cell input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .p-cell input:focus { border-color: var(--ember); box-shadow: 0 0 0 2px var(--ember-glow); }
+
+        /* RESULTS */
+        .results-outer {
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .r-group-label {
+            padding: 10px 14px 4px;
+            font-size: 0.56rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .r-chips {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding: 6px 14px 12px;
+        }
+        .r-chip {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 11px;
+        }
+        .r-chip-label { font-size: 0.58rem; color: var(--muted2); letter-spacing: 0.04em; }
+        .r-chip-val {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.15rem;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+            margin-top: 2px;
+        }
+        .r-chip-val .u { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-left: 2px; }
+        .r-chip.span2 { grid-column: span 2; }
+
+        .r-divider { height: 1px; background: var(--border); margin: 0 14px; }
+
+        .hidden { display: none; }
     </style>
 </head>
-<body onload="updateUI()">
-    <h1>🍕 Dough Calculator</h1>
+<body>
+<div class="container">
 
-    <div class="toggle-container">
-        <span style="font-weight:bold">Use Biga Method</span>
-        <label class="switch">
-            <input type="checkbox" id="useBiga" checked onchange="updateUI()">
-            <span class="slider"></span>
-        </label>
-    </div>
+    <header>
+        <div class="brand">Dough<em>.</em></div>
+        <div class="brand-sub">Neapolitan Calculator</div>
+    </header>
 
-    <div class="input-group">
-        <label>Dough Ball Weight (g):</label>
-        <input type="number" id="ballWeight" value="270" oninput="calculateDough()">
-    </div>
-    <div class="input-group">
-        <label>Number of Balls:</label>
-        <input type="number" id="ballCount" value="3" oninput="calculateDough()">
-    </div>
-    <div class="input-group">
-        <label>Total Hydration (%):</label>
-        <input type="number" id="hydration" value="70" oninput="calculateDough()">
-    </div>
-    <div class="input-group">
-        <label>Salt (%):</label>
-        <input type="number" id="salt" value="3" step="0.1" oninput="calculateDough()">
+    <!-- Method -->
+    <div class="section">
+        <div class="section-label">Method</div>
+        <div class="seg-control">
+            <button class="seg-btn active" id="seg-biga" onclick="setMethod(true)">Biga</button>
+            <button class="seg-btn" id="seg-direct" onclick="setMethod(false)">Direct</button>
+        </div>
+        <input type="checkbox" id="useBiga" checked style="display:none" onchange="updateUI()">
     </div>
 
-    <div id="biga-config" class="hidden">
-        <h2>Biga Settings</h2>
-        <div class="input-group">
-            <label>Biga Hydration (%):</label>
-            <input type="number" id="bigaHydration" value="50" oninput="calculateDough()">
+    <!-- Dough -->
+    <div class="section">
+        <div class="section-label">Dough</div>
+        <div class="panel">
+            <div class="row"><div><div class="row-label">Ball weight</div><div class="row-sub">g each</div></div><input type="number" id="ballWeight" value="270" oninput="calculateDough()"></div>
+            <div class="row"><div><div class="row-label">Number of balls</div></div><input type="number" id="ballCount" value="3" oninput="calculateDough()"></div>
+            <div class="row"><div><div class="row-label">Hydration</div><div class="row-sub">% of flour</div></div><input type="number" id="hydration" value="70" oninput="calculateDough()"></div>
+            <div class="row"><div><div class="row-label">Salt</div><div class="row-sub">% of flour</div></div><input type="number" id="salt" value="3" step="0.1" oninput="calculateDough()"></div>
         </div>
     </div>
 
-    <h2>Fermentation Schedule</h2>
-
-    <div class="input-group">
-        <label id="label-p1">Phase 1: Biga Temp (°C):</label>
-        <input type="number" id="temp1" value="21" oninput="calculateDough()">
-        <label style="margin-top:5px">Duration (hours):</label>
-        <input type="number" id="dur1" value="16" oninput="calculateDough()">
+    <!-- Biga -->
+    <div class="section hidden" id="biga-config">
+        <div class="section-label">Biga</div>
+        <div class="panel">
+            <div class="row"><div><div class="row-label">Biga hydration</div><div class="row-sub">% of biga flour</div></div><input type="number" id="bigaHydration" value="50" oninput="calculateDough()"></div>
+        </div>
     </div>
 
-    <div class="input-group">
-        <label id="label-p2">Phase 2: Fridge Temp (°C):</label>
-        <input type="number" id="temp2" value="4" oninput="calculateDough()">
-        <label style="margin-top:5px">Duration (hours):</label>
-        <input type="number" id="dur2" value="36" oninput="calculateDough()">
+    <!-- Fermentation -->
+    <div class="section">
+        <div class="section-label">Fermentation</div>
+        <div class="panel">
+            <div class="phase-block">
+                <div class="phase-name"><span class="phase-pip"></span><span id="label-p1">Phase 1 — Biga</span></div>
+                <div class="phase-inputs">
+                    <div class="p-cell"><label>Temp °C</label><input type="number" id="temp1" value="21" oninput="calculateDough()"></div>
+                    <div class="p-cell"><label>Hours</label><input type="number" id="dur1" value="12" oninput="calculateDough()"></div>
+                </div>
+            </div>
+            <div class="phase-block">
+                <div class="phase-name"><span class="phase-pip c2"></span><span id="label-p2">Phase 2 — Fridge</span></div>
+                <div class="phase-inputs">
+                    <div class="p-cell"><label>Temp °C</label><input type="number" id="temp2" value="4" oninput="calculateDough()"></div>
+                    <div class="p-cell"><label>Hours</label><input type="number" id="dur2" value="24" oninput="calculateDough()"></div>
+                </div>
+            </div>
+            <div class="phase-block hidden" id="phase3-section">
+                <div class="phase-name"><span class="phase-pip c3"></span>Phase 3 — Final Proof</div>
+                <div class="phase-inputs">
+                    <div class="p-cell"><label>Temp °C</label><input type="number" id="temp3" value="21" oninput="calculateDough()"></div>
+                    <div class="p-cell"><label>Hours</label><input type="number" id="dur3" value="8" oninput="calculateDough()"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="phase3-section" class="input-group hidden">
-        <label>Phase 3: Final Room Temp Proof (°C):</label>
-        <input type="number" id="temp3" value="21" oninput="calculateDough()">
-        <label style="margin-top:5px">Duration (hours):</label>
-        <input type="number" id="dur3" value="8" oninput="calculateDough()">
+    <!-- Results -->
+    <div class="section">
+        <div class="section-label">Recipe</div>
+        <div class="results-outer" id="results"></div>
     </div>
 
-    <div class="result" id="results"></div>
+</div>
+<script src="calculator.js"></script>
+<script>
+function setMethod(bigaOn) {
+    document.getElementById('useBiga').checked = bigaOn;
+    document.getElementById('seg-biga').classList.toggle('active', bigaOn);
+    document.getElementById('seg-direct').classList.toggle('active', !bigaOn);
+    updateUI();
+}
 
-    <script src="calculator.js"></script>
+function calculateDough() {
+    const biga = document.getElementById('useBiga').checked;
+    const W = parseFloat(document.getElementById('ballWeight').value)||0;
+    const N = parseFloat(document.getElementById('ballCount').value)||0;
+    const hydr = parseFloat(document.getElementById('hydration').value)||0;
+    const saltPct = parseFloat(document.getElementById('salt').value)||0;
+    const bigaHydrPct = parseFloat(document.getElementById('bigaHydration').value)||50;
+    const t1=parseFloat(document.getElementById('temp1').value)||0, d1=parseFloat(document.getElementById('dur1').value)||0;
+    const t2=parseFloat(document.getElementById('temp2').value)||0, d2=parseFloat(document.getElementById('dur2').value)||0;
+    const t3=biga?(parseFloat(document.getElementById('temp3').value)||0):0;
+    const d3=biga?(parseFloat(document.getElementById('dur3').value)||0):0;
+
+    const totalDough = W * N;
+    const totalFlour = (totalDough/(100+hydr+saltPct))*100;
+    const totalWater = (totalFlour*hydr)/100;
+    const totalSalt  = (totalFlour*saltPct)/100;
+
+    const getYF=(d,t)=>{ if(d===0)return 0; let f=(1+(25-t)/10); if(t<=7)f*=0.25; return(d/24)*f; };
+    let totalYF;
+    if(t2<=7&&d3>0){const wu=Math.min(2,d3),st=Math.max(0,d3-wu);totalYF=getYF(d1,t1)+getYF(d2,t2)+getYF(wu,(t2+t3)/2)+getYF(st,t3);}
+    else{totalYF=getYF(d1,t1)+getYF(d2,t2)+getYF(d3,t3);}
+    const yeastG=(totalFlour*(0.2/totalYF))/100;
+
+    const chip=(label,val,unit,span='')=>`
+      <div class="r-chip ${span}">
+        <div class="r-chip-label">${label}</div>
+        <div class="r-chip-val">${val}<span class="u">${unit}</span></div>
+      </div>`;
+
+    let html = `<div class="results-body">`;
+
+    if(biga){
+        const bigaWater=(totalFlour*bigaHydrPct)/100;
+        const remWater=totalWater-bigaWater;
+        html+=`
+        <div class="r-group-label">Step 1 — Biga</div>
+        <div class="r-chips">
+          ${chip('Flour', totalFlour.toFixed(1), 'g')}
+          ${chip('Water', bigaWater.toFixed(1), 'g')}
+          ${chip('Yeast', yeastG.toFixed(3), 'g', 'span2')}
+        </div>
+        <div class="r-divider"></div>
+        <div class="r-group-label">Step 2 — Final mix</div>
+        <div class="r-chips">
+          ${chip('Water', remWater.toFixed(1), 'g')}
+          ${chip('Salt', totalSalt.toFixed(1), 'g')}
+        </div>`;
+    } else {
+        html+=`
+        <div class="r-group-label">Ingredients</div>
+        <div class="r-chips">
+          ${chip('Flour', totalFlour.toFixed(1), 'g')}
+          ${chip('Water', totalWater.toFixed(1), 'g')}
+          ${chip('Salt', totalSalt.toFixed(1), 'g')}
+          ${chip('Yeast', yeastG.toFixed(3), 'g')}
+        </div>`;
+    }
+    html += `</div>`;
+    document.getElementById('results').innerHTML = html;
+}
+
+function updateUI(){
+    const biga=document.getElementById('useBiga').checked;
+    document.getElementById('biga-config').classList.toggle('hidden',!biga);
+    document.getElementById('phase3-section').classList.toggle('hidden',!biga);
+
+    const pip1=document.querySelector('#label-p1').closest('.phase-name').querySelector('.phase-pip');
+    const pip2=document.querySelector('#label-p2').closest('.phase-name').querySelector('.phase-pip');
+
+    if(biga){
+        document.getElementById('label-p1').textContent='Phase 1 — Biga';
+        document.getElementById('label-p2').textContent='Phase 2 — Fridge';
+        pip1.className='phase-pip';        // ember
+        pip2.className='phase-pip c2';     // cool blue
+    } else {
+        document.getElementById('label-p1').textContent='Phase 1 — Fridge';
+        document.getElementById('label-p2').textContent='Phase 2 — Final Proof';
+        pip1.className='phase-pip c2';     // cool blue
+        pip2.className='phase-pip c3';     // warm gold
+    }
+    calculateDough();
+}
+document.addEventListener('DOMContentLoaded', updateUI);
+</script>
 </body>
 </html>
