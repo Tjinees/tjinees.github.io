@@ -31,9 +31,6 @@ function calculateDough() {
     const t3 = useBiga ? parseFloat(document.getElementById('temp3').value) : 0;
     const d3 = useBiga ? parseFloat(document.getElementById('dur3').value) : 0;
 
-    // Use the target temp for the majority of the time
-    let effectiveTemp3 = t3;
-
     // Basic Validation
     if ([ballW, count, hydr, salt, t1, d1, t2, d2].some(isNaN)) {
         document.getElementById('results').innerHTML = "Enter all values...";
@@ -70,13 +67,11 @@ function calculateDough() {
     } else {
         totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
     }
-//    const totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
 
     const yeastPercent = baseline / totalYF;
     const yeastNeeded = (totalFlour * yeastPercent) / 100;
 
-
-// Output Generation — styled for new UI
+    // Output Generation — styled for new UI
     const chip = (label, val, unit, span='') => `
       <div class="r-chip ${span}">
         <div class="r-chip-label">${label}</div>
@@ -116,29 +111,7 @@ function calculateDough() {
 
     html += `</div>`;
     document.getElementById('results').innerHTML = html;
-//    document.getElementById('results').innerHTML = html;
 
-    // Output Generation
-//    let html = `
-//        <p><strong>Total Flour:</strong> ${totalFlour.toFixed(1)}g</p>
-//        <p><strong>Total Water:</strong> ${totalWater.toFixed(1)}g</p>
-//        <p><strong>Instant Yeast:</strong> ${yeastNeeded.toFixed(3)}g</p>
-//        <p><strong>Salt:</strong> ${totalSalt.toFixed(1)}g</p>
-//        <hr>
-//    `;
-//
-//    if (useBiga) {
-//        const bigaHydr = parseFloat(document.getElementById('bigaHydration').value);
-//        const bigaWater = (totalFlour * bigaHydr) / 100;
-//        html += `
-//            <h4 style="color:#d9534f">STEP 1: THE BIGA</h4>
-//            <p>Mix <b>${totalFlour.toFixed(1)}g flour</b>, <b>${bigaWater.toFixed(1)}g water</b>, and all the yeast.</p>
-//            <h4 style="color:#d9534f">STEP 2: FINAL MIX</h4>
-//            <p>Add the Biga to <b>${(totalWater - bigaWater).toFixed(1)}g water</b> and <b>${totalSalt.toFixed(2)}g salt</b>.</p>
-//        `;
-//    } else {
-//        html += `<p><b>Direct Method:</b> Mix all ingredients at once.</p>`;
-//    }
-//
-//    document.getElementById('results').innerHTML = html;
+    // Update start time banner
+    calculateStartTime();
 }

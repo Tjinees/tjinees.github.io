@@ -183,6 +183,87 @@
         .p-cell input::-webkit-outer-spin-button { -webkit-appearance: none; }
         .p-cell input:focus { border-color: var(--ember); box-shadow: 0 0 0 2px var(--ember-glow); }
 
+        /* PIZZA TIME */
+        .pizza-time-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .day-strip-row {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .day-strip {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .day-btn {
+            padding: 7px 2px;
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            background: var(--surface2);
+            color: var(--muted2);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-align: center;
+            transition: background var(--tr), color var(--tr), border-color var(--tr);
+        }
+        .day-btn.active {
+            background: var(--cool);
+            color: var(--ink);
+            border-color: var(--cool);
+        }
+        .time-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .time-select {
+            padding: 6px 9px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.82rem;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            color: var(--ink);
+            outline: none;
+            cursor: pointer;
+            transition: order-color var(--tr), box-shadow var(--tr);
+        }
+
+        .start-banner {
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .start-banner-label {
+            font-size: 0.66rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .start-banner-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.1rem;
+            color: var(--cool);
+            text-align: right;
+        }
+        .start-banner-sub {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--muted);
+            text-align: right;
+            margin-top: 2px;
+        }
+
         /* RESULTS */
         .results-outer {
             margin-top: 0px;
@@ -263,6 +344,30 @@
         </div>
     </div>
 
+    <!-- Pizza Time -->
+    <div class="section">
+        <div class="section-label">Pizza Time</div>
+        <div class="pizza-time-panel">
+            <div class="day-strip-row">
+                <div class="row-label">Day</div>
+                <div class="day-strip" id="dayStrip"></div>
+            </div>
+            <div class="time-row">
+                <div class="row-label">Time</div>
+                <select class="time-select" id="pizzaHour" onchange="calculateDough()"></select>
+            </div>
+            <div class="start-banner">
+                <div>
+                    <div class="start-banner-label">Start</div>
+                </div>
+                <div>
+                    <div class="start-banner-value" id="startValue">—</div>
+                    <div class="start-banner-sub" id="startSub"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Fermentation -->
     <div class="section">
         <div class="section-label">Fermentation</div>
@@ -300,6 +405,75 @@
 </div>
 <script src="calculator.js"></script>
 <script>
+const DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+function initDayStrip() {
+    const strip = document.getElementById('dayStrip');
+    // Default to Saturday (index 5)
+    strip.innerHTML = DAYS.map((d, i) => `
+        <button class="day-btn${i === 5 ? ' active' : ''}" onclick="selectDay(${i})">${d}</button>
+    `).join('');
+}
+
+function selectDay(i) {
+    document.querySelectorAll('.day-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+    calculateDough();
+}
+
+function getSelectedDay() {
+    const btns = document.querySelectorAll('.day-btn');
+    for (let i = 0; i < btns.length; i++) {
+        if (btns[i].classList.contains('active')) return i; // 0=Mo … 6=Su
+    }
+    return 5;
+}
+
+function initHourDropdown() {
+    const sel = document.getElementById('pizzaHour');
+    for (let h = 0; h < 24; h++) {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = String(h).padStart(2,'0') + ':00';
+        if (h === 17) opt.selected = true;
+        sel.appendChild(opt);
+    }
+}
+
+// Returns the next Date for the given weekday index (0=Mo…6=Su) at the given hour
+function nextOccurrence(dayIndex, hour) {
+    const jsDay = (dayIndex + 1) % 7; // Mo=1…Su=0 in JS
+    const now = new Date();
+    const d = new Date(now);
+    d.setHours(hour, 0, 0, 0);
+    // Days until target weekday
+    let diff = (jsDay - now.getDay() + 7) % 7;
+    if (diff === 0 && d <= now) diff = 7; // same day but time has passed → next week
+    d.setDate(d.getDate() + diff);
+    return d;
+}
+
+function calculateStartTime() {
+    const useBiga = document.getElementById('useBiga').checked;
+    const dayIndex = getSelectedDay();
+    const hour = parseInt(document.getElementById('pizzaHour').value);
+
+    const pizzaTime = nextOccurrence(dayIndex, hour);
+
+    const d1 = parseFloat(document.getElementById('dur1').value) || 0;
+    const d2 = parseFloat(document.getElementById('dur2').value) || 0;
+    const d3 = useBiga ? (parseFloat(document.getElementById('dur3').value) || 0) : 0;
+    const totalHours = d1 + d2 + d3;
+
+    const startTime = new Date(pizzaTime.getTime() - totalHours * 60 * 60 * 1000);
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const startDay = dayNames[startTime.getDay()];
+    const startHour = String(startTime.getHours()).padStart(2,'0') + ':00';
+
+    document.getElementById('startValue').textContent = `${startDay} · ${startHour}`;
+    document.getElementById('startSub').textContent = `${totalHours}h before pizza time`;
+}
+
 function setMethod(bigaOn) {
     document.getElementById('useBiga').checked = bigaOn;
     document.getElementById('seg-biga').classList.toggle('active', bigaOn);
@@ -318,8 +492,8 @@ function updateUI(){
     if(biga){
         document.getElementById('label-p1').textContent='Phase 1 — Biga';
         document.getElementById('label-p2').textContent='Phase 2 — Fridge';
-        pip1.className='phase-pip';        // ember
-        pip2.className='phase-pip c2';     // cool blue
+        pip1.className='phase-pip';
+        pip2.className='phase-pip c2';
         document.getElementById('temp1').value = 21;
         document.getElementById('temp2').value = 4;
         document.getElementById('dur1').value = 12;
@@ -327,8 +501,8 @@ function updateUI(){
     } else {
         document.getElementById('label-p1').textContent='Phase 1 — Fridge';
         document.getElementById('label-p2').textContent='Phase 2 — Final Proof';
-        pip1.className='phase-pip c2';     // cool blue
-        pip2.className='phase-pip c3';     // warm gold
+        pip1.className='phase-pip c2';
+        pip2.className='phase-pip c3';
         document.getElementById('temp1').value = 4;
         document.getElementById('temp2').value = 21;
         document.getElementById('dur1').value = 24;
@@ -336,7 +510,12 @@ function updateUI(){
     }
     calculateDough();
 }
-document.addEventListener('DOMContentLoaded', updateUI);
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDayStrip();
+    initHourDropdown();
+    updateUI();
+});
 </script>
 </body>
 </html>
