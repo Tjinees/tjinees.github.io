@@ -82,19 +82,23 @@ function calculateDough() {
       <div class="results-body">`;
 
     if (useBiga) {
+        const bigaPercent = parseFloat(document.getElementById('bigaPercent').value);
         const bigaHydr = parseFloat(document.getElementById('bigaHydration').value);
-        const bigaWater = (totalFlour * bigaHydr) / 100;
+        const bigaFlour = (totalFlour * bigaPercent) / 100;
+        const remFlour  = totalFlour - bigaFlour;
+        const bigaWater = (bigaFlour * bigaHydr) / 100;
         const remWater  = totalWater - bigaWater;
         html += `
             <div class="r-group-label">Step 1 — Biga</div>
             <div class="r-chips">
-              ${chip('Flour', totalFlour.toFixed(1), 'g')}
+              ${chip('Flour', bigaFlour.toFixed(1), 'g')}
               ${chip('Water', bigaWater.toFixed(1), 'g')}
               ${chip('Yeast', yeastNeeded.toFixed(3), 'g', 'span2')}
             </div>
             <div class="r-divider"></div>
             <div class="r-group-label">Step 2 — Final mix</div>
             <div class="r-chips">
+              ${chip('Flour', remFlour.toFixed(1), 'g')}
               ${chip('Water', remWater.toFixed(1), 'g')}
               ${chip('Salt', totalSalt.toFixed(1), 'g')}
             </div>`;
