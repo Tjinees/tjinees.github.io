@@ -1,17 +1,3 @@
-function updateUI() {
-    const useBiga = document.getElementById('useBiga').checked;
-
-    // Show/Hide Biga specific settings
-    document.getElementById('biga-config').classList.toggle('hidden', !useBiga);
-    document.getElementById('phase3-section').classList.toggle('hidden', !useBiga);
-
-    // Update Labels
-    document.getElementById('label-p1').textContent = useBiga ? "Phase 1: Biga Temp (°C):" : "Phase 1: Bulk Fermentation Temp (°C):";
-    document.getElementById('label-p2').textContent = useBiga ? "Phase 2: Fridge Temp (°C):" : "Phase 2: Final Proof Temp (°C):";
-
-    calculateDough();
-}
-
 function calculateDough() {
     const useBiga = document.getElementById('useBiga').checked;
 
@@ -33,7 +19,7 @@ function calculateDough() {
 
     // Basic Validation
     if ([ballW, count, hydr, salt, t1, d1, t2, d2].some(isNaN)) {
-        document.getElementById('results').innerHTML = "Enter all values...";
+        document.getElementById('results').innerHTML = "<div class='r-group-label'>Enter all values...</div>";
         return;
     }
 
@@ -43,43 +29,57 @@ function calculateDough() {
     const totalWater = (totalFlour * hydr) / 100;
     const totalSalt = (totalFlour * salt) / 100;
 
-    // Yeast Math
-    const baseline = 0.2;
-    const getYF = (d, t) => {
-        if (d === 0) return 0;
-        let factor = (1 + (25 - t) / 10);
-        if (t <= 7) factor *= 0.25; // The Fridge Brake
-        return (d / 24) * factor;
+    // --- FERMENTATIE MODEL (Equivalent Hours bij 21°C) ---
+    // Rekent alle uren bij temperatuur T om naar equivalente uren op kamertemperatuur (21°C)
+    const getEquivalentHours = (hours, temp, isColdPhase = false, isDirectStart = false) => {
+        if (hours <= 0) return 0;
+
+        // Direct deeg gaat warm de koelkast in -> 3 uur afkoelfase (gemiddeld 12.5°C)
+        if (isColdPhase && isDirectStart) {
+            const coolHours = Math.min(3, hours);
+            const coldHours = Math.max(0, hours - coolHours);
+            const avgCoolTemp = (21 + temp) / 2;
+
+            const coolEq = coolHours * Math.pow(2, (avgCoolTemp - 21) / 6);
+            const coldEq = coldHours * Math.pow(2, (temp - 21) / 6);
+            return coolEq + coldEq;
+        }
+
+        // Standaard gist-curve (halveert/verdubbelt elke ~6°C)
+        return hours * Math.pow(2, (temp - 21) / 6);
     };
 
-    // If the dough is coming from a cold Phase 2 (the fridge)
-    if (t2 <= 7 && d3 > 0) {
-        // We simulate the 2-hour warm-up lag by averaging the fridge and room temp
-        const warmUpDuration = Math.min(2, d3);
-        const stableDuration = Math.max(0, d3 - warmUpDuration);
-        const avgWarmUpTemp = (t2 + t3) / 2;
+    let totalEqHours = 0;
 
-        // Calculate a weighted Yeast Factor for Phase 3
-        const YF3_warmup = getYF(warmUpDuration, avgWarmUpTemp);
-        const YF3_stable = getYF(stableDuration, t3);
-
-        totalYF = getYF(d1, t1) + getYF(d2, t2) + YF3_warmup + YF3_stable;
+    if (useBiga) {
+        // BIGA METHODE
+        // Biga start met weinig gist, dus de gewogen rijsversnelling ligt lager.
+        // Factor 0.7 geeft de perfecte gistdosis voor een 8u tot 16u Biga.
+        const eq1 = getEquivalentHours(d1, t1) * 0.7; 
+        const eq2 = getEquivalentHours(d2, t2);
+        const eq3 = getEquivalentHours(d3, t3);
+        totalEqHours = eq1 + eq2 + eq3;
     } else {
-        totalYF = getYF(d1, t1) + getYF(d2, t2) + getYF(d3, t3);
+        // DIRECT DEEG METHODE
+        const eq1 = getEquivalentHours(d1, t1, t1 <= 10, true); // Phase 1 is Koelkast
+        const eq2 = getEquivalentHours(d2, t2); // Phase 2 is Kamertemp
+        totalEqHours = eq1 + eq2;
     }
 
-    const yeastPercent = baseline / totalYF;
+    totalEqHours = Math.max(0.5, totalEqHours);
+
+    // Formule voor Caputo Droge Gist (IDY) gebaseerd op totale equivalente uren
+    const yeastPercent = 0.90 / totalEqHours;
     const yeastNeeded = (totalFlour * yeastPercent) / 100;
 
-    // Output Generation — styled for new UI
+    // Output Generation
     const chip = (label, val, unit, span='') => `
       <div class="r-chip ${span}">
         <div class="r-chip-label">${label}</div>
         <div class="r-chip-val">${val}<span class="u">${unit}</span></div>
       </div>`;
 
-    let html = `
-      <div class="results-body">`;
+    let html = `<div class="results-body">`;
 
     if (useBiga) {
         const bigaPercent = parseFloat(document.getElementById('bigaPercent').value);
@@ -93,7 +93,7 @@ function calculateDough() {
             <div class="r-chips">
               ${chip('Flour', bigaFlour.toFixed(1), 'g')}
               ${chip('Water', bigaWater.toFixed(1), 'g')}
-              ${chip('Yeast', yeastNeeded.toFixed(3), 'g', 'span2')}
+              ${chip('Yeast', yeastNeeded.toFixed(2), 'g', 'span2')}
             </div>
             <div class="r-divider"></div>
             <div class="r-group-label">Step 2 — Final mix</div>
@@ -109,7 +109,7 @@ function calculateDough() {
               ${chip('Flour', totalFlour.toFixed(1), 'g')}
               ${chip('Water', totalWater.toFixed(1), 'g')}
               ${chip('Salt', totalSalt.toFixed(1), 'g')}
-              ${chip('Yeast', yeastNeeded.toFixed(3), 'g')}
+              ${chip('Yeast', yeastNeeded.toFixed(2), 'g')}
             </div>`;
     }
 
@@ -117,5 +117,7 @@ function calculateDough() {
     document.getElementById('results').innerHTML = html;
 
     // Update start time banner
-    calculateStartTime();
+    if (typeof calculateStartTime === 'function') {
+        calculateStartTime();
+    }
 }
