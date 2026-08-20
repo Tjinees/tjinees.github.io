@@ -50,6 +50,7 @@ function calculateDough() {
     };
 
     let totalEqHours = 0;
+    let baseFactor;
 
     if (useBiga) {
         // BIGA METHODE
@@ -59,17 +60,20 @@ function calculateDough() {
         const eq2 = getEquivalentHours(d2, t2);
         const eq3 = getEquivalentHours(d3, t3);
         totalEqHours = eq1 + eq2 + eq3;
+        baseFactor = 0.85;
     } else {
         // DIRECT DEEG METHODE
         const eq1 = getEquivalentHours(d1, t1, t1 <= 10, true); // Phase 1 is Koelkast
         const eq2 = getEquivalentHours(d2, t2); // Phase 2 is Kamertemp
         totalEqHours = eq1 + eq2;
+        baseFactor = 0.5;
     }
 
     totalEqHours = Math.max(0.5, totalEqHours);
 
     // Formule voor Caputo Droge Gist (IDY) gebaseerd op totale equivalente uren
-    const yeastPercent = 0.90 / totalEqHours;
+    const yeastPercent = baseFactor / totalEqHours;
+    // const yeastPercent = 0.90 / totalEqHours;
     const yeastNeeded = (totalFlour * yeastPercent) / 100;
 
     // Output Generation
