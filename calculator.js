@@ -66,7 +66,7 @@ function calculateDough() {
         const eq1 = getEquivalentHours(d1, t1, t1 <= 10, true); // Phase 1 is Koelkast
         const eq2 = getEquivalentHours(d2, t2); // Phase 2 is Kamertemp
         totalEqHours = eq1 + eq2;
-        baseFactor = 0.5;
+        baseFactor = 0.84;
     }
 
     totalEqHours = Math.max(0.5, totalEqHours);
